@@ -1,19 +1,28 @@
 const path = require('path');
 const webpack = require('webpack');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
+function resolve(dir) {
+  return path.join(__dirname, dir)
+}
+
 module.exports = {
-  entry: path.resolve(__dirname, './src/index.js'),
+  cache: {
+    type: 'filesystem',
+    buildDependencies: {
+      config: [__filename],
+    },
+    name: 'development-cache',
+  },
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: resolve('dist'),
     filename: '[name].[contenthash].js',
   },
   module: {
     rules: [
-      { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader' }, 
+      { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader' },
       {
         test: /\.css$/,
         use: [
@@ -27,10 +36,56 @@ module.exports = {
       },
     ]
   },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      title: 'Welcome to sivaraj-v github ',
+      template: './src/index.html',
+      filename: './index.html',
+      'meta': {
+        'viewport': 'width=device-width, initial-scale=1.0',
+        'charset': 'UTF-8'
+      }
+    }),
+    new webpack.ProgressPlugin({ percentBy: "entries" }),
+    new MiniCssExtractPlugin({
+      filename: `[name].css`,
+    }),
+  ],
+  snapshot: {
+    managedPaths: [resolve('./node_modules')],
+    immutablePaths: [],
+    buildDependencies: {
+      hash: true,
+      timestamp: true,
+    },
+    module: {
+      timestamp: true,
+    },
+    resolve: {
+      timestamp: true,
+    },
+    resolveBuildDependencies: {
+      hash: true,
+      timestamp: true,
+    },
+  },
   devServer: {
-    contentBase: path.join(__dirname, 'dist'),
-    port: 9000,
-    open: true
+    client: {
+      port: '443',
+      host: '3000-turquoise-haddock-rgc28dxs.ws-us03.gitpod.io',
+    },
+    static: [
+      {
+        directory: resolve('dist'),
+      },
+    ],
+    port: 3000,
+    firewall: false,
+    host: '0.0.0.0',
+  },
+  experiments: {
+    topLevelAwait: true,
   },
   optimization: {
     runtimeChunk: 'single',
@@ -52,21 +107,7 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    new CleanWebpackPlugin(),
-    new HtmlWebpackPlugin({
-      title: 'Welcome to sivaraj-v github ',
-      template: './src/index.html',
-      filename: './index.html',
-      'meta': {
-        'viewport': 'width=device-width, initial-scale=1.0',
-        'charset': 'UTF-8'
-      }
-    }),
-    new webpack.ProgressPlugin({ percentBy: "entries" }),
-    new MiniCssExtractPlugin({
-      filename: `[name].css`,
-    }),
-    // new BundleAnalyzerPlugin()
-  ]
+  mode: 'development',
+  entry: resolve('./src/index.js'),
+  infrastructureLogging: { debug: /PackFileCache/ },
 };
